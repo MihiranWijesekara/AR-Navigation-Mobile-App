@@ -20,6 +20,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool loading = false;
   bool _obscurePassword = true;
   String? errorMessage;
+  String? selectedUserType;
+
+  final List<String> userTypes = [
+    'User',
+    'Guide',
+    'Hotel Owner',
+    'Safari Vehicle',
+  ];
 
   @override
   void initState() {
@@ -80,6 +88,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       'firstName': firstNameController.text,
       'lastName': lastNameController.text,
       'phoneNumber': phoneNumberController.text,
+      'userType': selectedUserType,
     };
 
     print('=== SIGN UP DATA ===');
@@ -88,13 +97,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
     print('Phone Number: ${phoneNumberController.text}');
     print('Username: ${usernameController.text}');
     print('Email: ${emailController.text}');
+    print('User Type: $selectedUserType');
     print('Password Length: ${passwordController.text.length} characters');
     print('Full Data: $userData');
     print('==================');
 
     try {
       final response = await http.post(
-        Uri.parse('https://a47ca3ff9552.ngrok-free.app/api/auth/signup'),
+        Uri.parse('https://2a97093f82c1.ngrok-free.app/api/auth/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(userData),
       );
@@ -301,6 +311,55 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                     validator: (value) => value == null || value.isEmpty
                         ? 'Enter username'
+                        : null,
+                  ),
+                  const SizedBox(height: 16),
+
+                  // User Type Selection
+                  DropdownButtonFormField<String>(
+                    value: selectedUserType,
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedUserType = newValue;
+                      });
+                    },
+                    style: const TextStyle(color: Colors.white),
+                    dropdownColor: const Color(0xff1b263b),
+                    decoration: const InputDecoration(
+                      labelText: 'Select User Type',
+                      labelStyle: TextStyle(color: Colors.white70),
+                      filled: true,
+                      fillColor: Color(0xff1b263b),
+                      prefixIcon: Icon(Icons.category, color: Colors.white70),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.white, width: 1.5),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.redAccent),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.redAccent),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                      ),
+                    ),
+                    items: userTypes.map<DropdownMenuItem<String>>((
+                      String value,
+                    ) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          value,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      );
+                    }).toList(),
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Please select user type'
                         : null,
                   ),
                   const SizedBox(height: 16),
