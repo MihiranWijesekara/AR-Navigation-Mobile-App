@@ -2,9 +2,12 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter_application_1/pages/Home_pages/Hotel_secreen.dart';
+import 'package:flutter_application_1/pages/Home_pages/Safari_screen.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'pages/Home_pages/Guide_secreen.dart';
 
 // --- Configuration ---
 final Map<String, Point<double>> beaconCoordinates = {
@@ -129,6 +132,14 @@ class HomeContentScreen extends StatelessWidget {
                   'Find and book comfortable accommodations',
                   Icons.hotel,
                   const Color(0xff2563eb), // Blue
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HotelScreen(),
+                      ),
+                    );
+                  },
                 ),
                 _buildServiceCard(
                   context,
@@ -136,6 +147,14 @@ class HomeContentScreen extends StatelessWidget {
                   'Connect with experienced local guides',
                   Icons.person_pin_circle,
                   const Color(0xff059669), // Green
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const GuideScreen(),
+                      ),
+                    );
+                  },
                 ),
                 _buildServiceCard(
                   context,
@@ -143,6 +162,14 @@ class HomeContentScreen extends StatelessWidget {
                   'Book safari vehicles for your adventure',
                   Icons.directions_car,
                   const Color(0xffdc2626), // Red
+                  () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const SafariScreen(),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -159,6 +186,7 @@ class HomeContentScreen extends StatelessWidget {
     String description,
     IconData icon,
     Color color,
+    VoidCallback onTap,
   ) {
     return Card(
       elevation: 8,
@@ -168,15 +196,7 @@ class HomeContentScreen extends StatelessWidget {
         side: BorderSide(color: color.withOpacity(0.3), width: 1),
       ),
       child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$title service selected'),
-              backgroundColor: color,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(20),
