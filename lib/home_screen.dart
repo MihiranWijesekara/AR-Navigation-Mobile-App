@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xff0d1b2a),
         foregroundColor: Colors.white,
-        title: const Text("Home"),
+        title: const Text("WildRetreat"),
       ),
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -95,39 +95,132 @@ class HomeContentScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.home, size: 100, color: Colors.orange),
           const SizedBox(height: 20),
           const Text(
-            "Welcome to Home Screen!",
+            'Welcome to WildRetreat',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 24,
+              fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           const Text(
-            "You have successfully logged in",
+            'Choose your service',
             style: TextStyle(color: Colors.white70, fontSize: 16),
           ),
           const SizedBox(height: 30),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-            icon: const Icon(Icons.logout),
-            label: const Text('Logout'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+
+          Expanded(
+            child: GridView.count(
+              crossAxisCount: 1,
+              childAspectRatio: 2.5,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              children: [
+                _buildServiceCard(
+                  context,
+                  'Hotel',
+                  'Find and book comfortable accommodations',
+                  Icons.hotel,
+                  const Color(0xff2563eb), // Blue
+                ),
+                _buildServiceCard(
+                  context,
+                  'Guide',
+                  'Connect with experienced local guides',
+                  Icons.person_pin_circle,
+                  const Color(0xff059669), // Green
+                ),
+                _buildServiceCard(
+                  context,
+                  'Safari Vehicle',
+                  'Book safari vehicles for your adventure',
+                  Icons.directions_car,
+                  const Color(0xffdc2626), // Red
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+
+  Widget _buildServiceCard(
+    BuildContext context,
+    String title,
+    String description,
+    IconData icon,
+    Color color,
+  ) {
+    return Card(
+      elevation: 8,
+      color: const Color(0xff1b263b),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: color.withOpacity(0.3), width: 1),
+      ),
+      child: InkWell(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$title service selected'),
+              backgroundColor: color,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, size: 40, color: color),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward_ios, color: color, size: 20),
+            ],
+          ),
+        ),
       ),
     );
   }
