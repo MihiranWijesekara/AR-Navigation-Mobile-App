@@ -42,7 +42,7 @@ class GuideScreen extends StatelessWidget {
                     "Mountain & Adventure Guide",
                     "4.9",
                     "5+ years experience",
-                    "Available Now",
+                    "\$45/hour",
                   ),
                   const SizedBox(height: 16),
                   _buildGuideCard(
@@ -51,7 +51,7 @@ class GuideScreen extends StatelessWidget {
                     "Historical & Cultural Guide",
                     "4.8",
                     "3+ years experience",
-                    "Available Today",
+                    "\$35/hour",
                   ),
                   const SizedBox(height: 16),
                   _buildGuideCard(
@@ -60,7 +60,7 @@ class GuideScreen extends StatelessWidget {
                     "City Tour Specialist",
                     "4.7",
                     "4+ years experience",
-                    "Busy until 3 PM",
+                    "\$30/hour",
                   ),
                   const SizedBox(height: 16),
                   _buildGuideCard(
@@ -69,7 +69,7 @@ class GuideScreen extends StatelessWidget {
                     "Nature & Wildlife Guide",
                     "4.9",
                     "6+ years experience",
-                    "Available Now",
+                    "\$50/hour",
                   ),
                   const SizedBox(height: 16),
                   _buildGuideCard(
@@ -78,7 +78,7 @@ class GuideScreen extends StatelessWidget {
                     "Photography Tour Guide",
                     "4.6",
                     "2+ years experience",
-                    "Available Tomorrow",
+                    "\$25/hour",
                   ),
                 ],
               ),
@@ -96,7 +96,7 @@ class GuideScreen extends StatelessWidget {
     String specialty,
     String rating,
     String experience,
-    String availability,
+    String hourlyRate,
   ) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -167,23 +167,17 @@ class GuideScreen extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: availability == "Available Now"
-                        ? const Color(0xff059669).withOpacity(0.2)
-                        : Colors.orange.withOpacity(0.2),
+                    color: const Color(0xff2563eb).withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: availability == "Available Now"
-                          ? const Color(0xff059669)
-                          : Colors.orange,
+                      color: const Color(0xff2563eb),
                       width: 1,
                     ),
                   ),
                   child: Text(
-                    availability,
-                    style: TextStyle(
-                      color: availability == "Available Now"
-                          ? const Color(0xff059669)
-                          : Colors.orange,
+                    hourlyRate,
+                    style: const TextStyle(
+                      color: Color(0xff2563eb),
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),

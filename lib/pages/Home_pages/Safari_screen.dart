@@ -40,9 +40,8 @@ class SafariScreen extends StatelessWidget {
                     context,
                     "Rajesh Kumar",
                     "Jeep Wrangler - 4WD",
-                    "4.9",
-                    "8+ years experience",
-                    "Available Now",
+                    "ABC-1234",
+                    "\$80/hour • \$600/day",
                     Icons.directions_car,
                   ),
                   const SizedBox(height: 16),
@@ -50,9 +49,8 @@ class SafariScreen extends StatelessWidget {
                     context,
                     "Sunil Fernando",
                     "Toyota Land Cruiser",
-                    "4.8",
-                    "6+ years experience",
-                    "Available Today",
+                    "XYZ-5678",
+                    "\$90/hour • \$700/day",
                     Icons.airport_shuttle,
                   ),
                   const SizedBox(height: 16),
@@ -60,9 +58,8 @@ class SafariScreen extends StatelessWidget {
                     context,
                     "Mahesh Silva",
                     "Safari Van - 8 Seater",
-                    "4.7",
-                    "5+ years experience",
-                    "Busy until 2 PM",
+                    "DEF-9012",
+                    "\$120/hour • \$950/day",
                     Icons.rv_hookup,
                   ),
                   const SizedBox(height: 16),
@@ -70,9 +67,8 @@ class SafariScreen extends StatelessWidget {
                     context,
                     "Pradeep Wijesekara",
                     "Off-Road Defender",
-                    "4.9",
-                    "10+ years experience",
-                    "Available Now",
+                    "GHI-3456",
+                    "\$85/hour • \$650/day",
                     Icons.local_shipping,
                   ),
                   const SizedBox(height: 16),
@@ -80,9 +76,8 @@ class SafariScreen extends StatelessWidget {
                     context,
                     "Chaminda Perera",
                     "Mini Bus - 15 Seater",
-                    "4.6",
-                    "4+ years experience",
-                    "Available Tomorrow",
+                    "JKL-7890",
+                    "\$150/hour • \$1200/day",
                     Icons.directions_bus,
                   ),
                 ],
@@ -99,9 +94,8 @@ class SafariScreen extends StatelessWidget {
     BuildContext context,
     String ownerName,
     String vehicleType,
-    String rating,
-    String experience,
-    String availability,
+    String regNumber,
+    String pricingInfo,
     IconData vehicleIcon,
   ) {
     return Container(
@@ -159,47 +153,18 @@ class SafariScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  experience,
+                  pricingInfo,
                   style: const TextStyle(
-                    color: Color(0xff059669),
+                    color: Color(0xff2563eb),
                     fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: availability == "Available Now"
-                        ? const Color(0xff059669).withOpacity(0.2)
-                        : Colors.orange.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: availability == "Available Now"
-                          ? const Color(0xff059669)
-                          : Colors.orange,
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    availability,
-                    style: TextStyle(
-                      color: availability == "Available Now"
-                          ? const Color(0xff059669)
-                          : Colors.orange,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
 
-          // Rating and Action Button
+          // Registration Number and Action Button
           Column(
             children: [
               Container(
@@ -211,10 +176,14 @@ class SafariScreen extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.star, color: Colors.white, size: 14),
+                    const Icon(
+                      Icons.confirmation_number,
+                      color: Colors.white,
+                      size: 14,
+                    ),
                     const SizedBox(width: 4),
                     Text(
-                      rating,
+                      regNumber,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 12,
