@@ -44,9 +44,10 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.statusCode == 200) {
-        // Parse the response to get user role
+        // Parse the response to get user role and active status
         final responseData = json.decode(response.body);
         final userRoles = responseData['userRoles'] as String?;
+        final isActive = responseData['active'] as bool? ?? false;
 
         // Successful login
         ScaffoldMessenger.of(context).showSnackBar(
@@ -57,17 +58,29 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
 
-        // Navigate based on user role
+        // Navigate based on user role and active status
         if (userRoles != null) {
           switch (userRoles) {
             case 'Hotel':
-              Navigator.pushReplacementNamed(context, '/hotel-owner');
+              if (isActive) {
+                Navigator.pushReplacementNamed(context, '/hotel-owner');
+              } else {
+                Navigator.pushReplacementNamed(context, '/active-hotel');
+              }
               break;
             case 'Guide':
-              Navigator.pushReplacementNamed(context, '/guide');
+              if (isActive) {
+                Navigator.pushReplacementNamed(context, '/guide');
+              } else {
+                Navigator.pushReplacementNamed(context, '/active-guide');
+              }
               break;
             case 'Safari':
-              Navigator.pushReplacementNamed(context, '/safari-owner');
+              if (isActive) {
+                Navigator.pushReplacementNamed(context, '/safari-owner');
+              } else {
+                Navigator.pushReplacementNamed(context, '/active-safari');
+              }
               break;
             case 'User':
             default:
