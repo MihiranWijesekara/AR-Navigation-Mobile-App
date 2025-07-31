@@ -44,6 +44,10 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (response.statusCode == 200) {
+        // Parse the response to get user role
+        final responseData = json.decode(response.body);
+        final userRoles = responseData['userRoles'] as String?;
+
         // Successful login
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -52,7 +56,28 @@ class _LoginScreenState extends State<LoginScreen> {
             duration: Duration(seconds: 2),
           ),
         );
-        Navigator.pushReplacementNamed(context, '/home');
+
+        // Navigate based on user role
+        if (userRoles != null) {
+          switch (userRoles) {
+            case 'Hotel':
+              Navigator.pushReplacementNamed(context, '/hotel-owner');
+              break;
+            case 'Guide':
+              Navigator.pushReplacementNamed(context, '/guide');
+              break;
+            case 'Safari':
+              Navigator.pushReplacementNamed(context, '/safari-owner');
+              break;
+            case 'User':
+            default:
+              Navigator.pushReplacementNamed(context, '/home');
+              break;
+          }
+        } else {
+          // If no role is specified, navigate to home
+          Navigator.pushReplacementNamed(context, '/home');
+        }
       } else {
         // Handle error
         final errorMessage =

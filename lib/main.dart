@@ -3,6 +3,9 @@ import 'package:camera/camera.dart';
 import 'package:flutter_application_1/home_screen.dart';
 import 'package:flutter_application_1/login_screen.dart';
 import 'package:flutter_application_1/signup_screen.dart';
+import 'package:flutter_application_1/pages/Role/Hotel_Owner.dart';
+import 'package:flutter_application_1/pages/Role/Guide.dart';
+import 'package:flutter_application_1/pages/Role/safari_owner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +35,9 @@ class MyApp extends StatelessWidget {
         '/login': (_) => const LoginScreen(),
         '/signup': (_) => const SignUpScreen(),
         '/home': (context) => HomeScreen(cameras: cameras),
+        '/hotel-owner': (_) => const HotelOwner(),
+        '/guide': (_) => const Guide(),
+        '/safari-owner': (_) => const SafariOwner(),
       },
     );
   }
