@@ -215,13 +215,8 @@ class GuideScreen extends StatelessWidget {
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () {
-                  // TODO: Navigate to guide details or booking
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Selected guide: $guideName'),
-                      backgroundColor: const Color(0xff059669),
-                    ),
-                  );
+                  // Open booking modal
+                  _showGuideBookingModal(context, guideName, hourlyRate);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xff2563eb),
@@ -241,6 +236,209 @@ class GuideScreen extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void _showGuideBookingModal(
+    BuildContext context,
+    String guideName,
+    String hourlyRate,
+  ) {
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController nicController = TextEditingController();
+    final TextEditingController mobileController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xff1b263b),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Column(
+            children: [
+              const Icon(Icons.person, color: Color(0xff059669), size: 40),
+              const SizedBox(height: 8),
+              Text(
+                'Book Guide: $guideName',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Name Input
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Full Name',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(Icons.person, color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: const Color(0xff059669).withOpacity(0.5),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xff059669)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // NIC Input
+                TextField(
+                  controller: nicController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'NIC Number',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(Icons.badge, color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: const Color(0xff059669).withOpacity(0.5),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xff059669)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Mobile Number Input
+                TextField(
+                  controller: mobileController,
+                  keyboardType: TextInputType.phone,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Mobile Number',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(Icons.phone, color: Colors.white70),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: const Color(0xff059669).withOpacity(0.5),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xff059669)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Price Display
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xff059669).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: const Color(0xff059669).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.attach_money,
+                        color: Color(0xff059669),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        hourlyRate,
+                        style: const TextStyle(
+                          color: Color(0xff059669),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+
+                // Guide Info
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xff0d1b2a),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'You are booking $guideName for guide services',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Validate inputs
+                if (nameController.text.isEmpty ||
+                    nicController.text.isEmpty ||
+                    mobileController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please fill in all fields'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                // Process booking - can be connected to backend
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Guide booking confirmed! ${nameController.text} has booked $guideName ($hourlyRate)',
+                    ),
+                    backgroundColor: const Color(0xff059669),
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xff059669),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Book Guide'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
