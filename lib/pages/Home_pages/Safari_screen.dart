@@ -35,7 +35,7 @@ class SafariScreen extends StatelessWidget {
             const SizedBox(height: 20),
             Expanded(
               child: ListView(
-                children: [
+                children: [ 
                   _buildSafariCard(
                     context,
                     "Rajesh Kumar",
