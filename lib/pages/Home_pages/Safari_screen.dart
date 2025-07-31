@@ -236,6 +236,8 @@ class SafariScreen extends StatelessWidget {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController nicController = TextEditingController();
     final TextEditingController mobileController = TextEditingController();
+    final TextEditingController dateController = TextEditingController();
+    DateTime? selectedDate;
 
     showDialog(
       context: context,
@@ -393,6 +395,62 @@ class SafariScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
+                // Safari Date Input
+                TextField(
+                  controller: dateController,
+                  readOnly: true,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Safari Date',
+                    labelStyle: const TextStyle(color: Colors.white70),
+                    prefixIcon: const Icon(
+                      Icons.calendar_today,
+                      color: Colors.white70,
+                    ),
+                    suffixIcon: const Icon(
+                      Icons.arrow_drop_down,
+                      color: Colors.white70,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: const Color(0xff059669).withOpacity(0.5),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Color(0xff059669)),
+                    ),
+                  ),
+                  onTap: () async {
+                    final DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime.now(),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: const ColorScheme.dark(
+                              primary: Color(0xff059669),
+                              onPrimary: Colors.white,
+                              surface: Color(0xff1b263b),
+                              onSurface: Colors.white,
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (pickedDate != null) {
+                      selectedDate = pickedDate;
+                      dateController.text =
+                          '${pickedDate.day}/${pickedDate.month}/${pickedDate.year}';
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+
                 // Price Display
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -441,7 +499,8 @@ class SafariScreen extends StatelessWidget {
                 // Validate inputs
                 if (nameController.text.isEmpty ||
                     nicController.text.isEmpty ||
-                    mobileController.text.isEmpty) {
+                    mobileController.text.isEmpty ||
+                    dateController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Please fill in all fields'),
@@ -456,7 +515,7 @@ class SafariScreen extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'Safari booking confirmed! ${nameController.text} has booked $vehicleType ($regNumber) with $ownerName',
+                      'Safari booking confirmed! ${nameController.text} has booked $vehicleType ($regNumber) with $ownerName on ${dateController.text}',
                     ),
                     backgroundColor: const Color(0xff059669),
                     duration: const Duration(seconds: 4),

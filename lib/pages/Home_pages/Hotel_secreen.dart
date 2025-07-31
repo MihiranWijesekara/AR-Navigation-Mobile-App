@@ -255,7 +255,9 @@ class HotelScreen extends StatelessWidget {
     final TextEditingController nameController = TextEditingController();
     final TextEditingController nicController = TextEditingController();
     final TextEditingController mobileController = TextEditingController();
+    final TextEditingController dateController = TextEditingController();
     String selectedBookingType = 'per night';
+    DateTime? selectedDate;
 
     showDialog(
       context: context,
@@ -353,6 +355,62 @@ class HotelScreen extends StatelessWidget {
                           borderSide: BorderSide(color: color),
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Booking Date Input
+                    TextField(
+                      controller: dateController,
+                      readOnly: true,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        labelText: 'Booking Date',
+                        labelStyle: const TextStyle(color: Colors.white70),
+                        prefixIcon: const Icon(
+                          Icons.calendar_today,
+                          color: Colors.white70,
+                        ),
+                        suffixIcon: const Icon(
+                          Icons.arrow_drop_down,
+                          color: Colors.white70,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: color.withOpacity(0.5)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: color),
+                        ),
+                      ),
+                      onTap: () async {
+                        final DateTime? pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: ColorScheme.dark(
+                                  primary: color,
+                                  onPrimary: Colors.white,
+                                  surface: const Color(0xff1b263b),
+                                  onSurface: Colors.white,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (pickedDate != null) {
+                          selectedDate = pickedDate;
+                          dateController.text =
+                              '${pickedDate.day}/${pickedDate.month}/${pickedDate.year}';
+                        }
+                      },
                     ),
                     const SizedBox(height: 16),
 
@@ -465,7 +523,8 @@ class HotelScreen extends StatelessWidget {
                     // Validate inputs
                     if (nameController.text.isEmpty ||
                         nicController.text.isEmpty ||
-                        mobileController.text.isEmpty) {
+                        mobileController.text.isEmpty ||
+                        dateController.text.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Please fill in all fields'),
@@ -480,7 +539,7 @@ class HotelScreen extends StatelessWidget {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          'Booking confirmed for ${nameController.text} at $hotelName ($selectedBookingType)',
+                          'Booking confirmed for ${nameController.text} at $hotelName ($selectedBookingType) on ${dateController.text}',
                         ),
                         backgroundColor: color,
                         duration: const Duration(seconds: 3),
