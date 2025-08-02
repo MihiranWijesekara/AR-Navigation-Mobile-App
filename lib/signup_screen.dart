@@ -29,6 +29,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
     'Safari Vehicle',
   ];
 
+  // Mapping from display names to backend values
+  final Map<String, String> userTypeMapping = {
+    'User': 'User',
+    'Guide': 'Guide',
+    'Hotel Owner': 'Hotel',
+    'Safari Vehicle': 'Safari',
+  };
+
   @override
   void initState() {
     super.initState();
@@ -88,7 +96,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       'firstName': firstNameController.text,
       'lastName': lastNameController.text,
       'phoneNumber': phoneNumberController.text,
-      'userType': selectedUserType,
+      'userRoles': userTypeMapping[selectedUserType] ?? selectedUserType,
     };
 
     print('=== SIGN UP DATA ===');
@@ -104,7 +112,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://2a97093f82c1.ngrok-free.app/api/auth/signup'),
+        Uri.parse('https://a15d31bd8e7f.ngrok-free.app/api/auth/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(userData),
       );
