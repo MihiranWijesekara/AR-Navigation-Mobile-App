@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/services/user_service.dart';
 
 class ActiveHotelScreen extends StatefulWidget {
   const ActiveHotelScreen({Key? key}) : super(key: key);
@@ -9,6 +10,7 @@ class ActiveHotelScreen extends StatefulWidget {
 
 class _ActiveHotelScreenState extends State<ActiveHotelScreen> {
   final _formKey = GlobalKey<FormState>();
+  String? _userId;
 
   // Controllers for form fields
   final _hotelNameController = TextEditingController();
@@ -26,6 +28,24 @@ class _ActiveHotelScreenState extends State<ActiveHotelScreen> {
     _nightFeeController.dispose();
     _numberOfRoomsController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // Add this method to load user data
+  void _loadUserData() async {
+    final userData = await UserService.getUserData();
+    if (userData != null) {
+      setState(() {
+        _userId = userData['id']?.toString(); // Update the state with user ID
+      });
+      print('User role: ${userData['userRoles']}');
+      print('User ID: ${userData['id']}');
+    }
   }
 
   void _submitForm() {
@@ -69,9 +89,11 @@ class _ActiveHotelScreenState extends State<ActiveHotelScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text(
-                'Hotel Information',
-                style: TextStyle(
+              Text(
+                _userId != null
+                    ? 'Hotel Information (ID: $_userId)'
+                    : 'Hotel Information',
+                style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,

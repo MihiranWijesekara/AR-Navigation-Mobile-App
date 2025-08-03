@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/services/user_service.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -23,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  // Update the _login method in login_screen.dart
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -32,8 +34,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final url = Uri.parse(
-        'https://4c1e1e431adf.ngrok-free.app/api/auth/signin',
+        'https://3f35dc373840.ngrok-free.app/api/auth/signin',
       );
+
+      // Debug: Log request data
+      print('Login Request URL: $url');
+      print(
+        'Login Request Body: ${json.encode({'username': emailController.text, 'password': passwordController.text})}',
+      );
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -43,13 +52,29 @@ class _LoginScreenState extends State<LoginScreen> {
         }),
       );
 
+      // Debug: Log response details
+      print('Response Status Code: ${response.statusCode}');
+      print('Response Headers: ${response.headers}');
+      print('Response Body: ${response.body}');
+
       if (response.statusCode == 200) {
-        // Parse the response to get user role and active status
         final responseData = json.decode(response.body);
+
+        // Debug: Log parsed response data
+        print('Parsed Response Data: $responseData');
+        print('Response Data Type: ${responseData.runtimeType}');
+
         final userRoles = responseData['userRoles'] as String?;
         final isActive = responseData['active'] as bool? ?? false;
 
-        // Successful login
+        // Debug: Log extracted values
+        print('User Roles: $userRoles (Type: ${userRoles.runtimeType})');
+        print('Is Active: $isActive (Type: ${isActive.runtimeType})');
+        print('All Response Keys: ${responseData.keys.toList()}');
+
+        // Save user data to shared preferences
+        await UserService.saveUserData(responseData);
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Login Successful!'),
@@ -58,10 +83,16 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
 
-        // Navigate based on user role and active status
+        // Debug: Log navigation decision
+        print(
+          'Navigation Decision - UserRoles: $userRoles, IsActive: $isActive',
+        );
+
+        // Rest of your navigation logic remains the same...
         if (userRoles != null) {
           switch (userRoles) {
             case 'Hotel':
+              print('Navigating to Hotel route - Active: $isActive');
               if (isActive) {
                 Navigator.pushReplacementNamed(context, '/hotel-owner');
               } else {
@@ -69,6 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
               }
               break;
             case 'Guide':
+              print('Navigating to Guide route - Active: $isActive');
               if (isActive) {
                 Navigator.pushReplacementNamed(context, '/guide');
               } else {
@@ -76,6 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
               }
               break;
             case 'Safari':
+              print('Navigating to Safari route - Active: $isActive');
               if (isActive) {
                 Navigator.pushReplacementNamed(context, '/safari-owner');
               } else {
@@ -84,17 +117,23 @@ class _LoginScreenState extends State<LoginScreen> {
               break;
             case 'User':
             default:
+              print('Navigating to User/Default route');
               Navigator.pushReplacementNamed(context, '/home');
               break;
           }
         } else {
-          // If no role is specified, navigate to home
+          print('UserRoles is null, navigating to home');
           Navigator.pushReplacementNamed(context, '/home');
         }
       } else {
-        // Handle error
+        // Debug: Log error response
+        print('Error Response Status: ${response.statusCode}');
+        print('Error Response Body: ${response.body}');
+
         final errorMessage =
             json.decode(response.body)['message'] ?? 'Login failed';
+        print('Extracted Error Message: $errorMessage');
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
@@ -104,6 +143,11 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (e) {
+      // Debug: Log exception details
+      print('Login Exception: $e');
+      print('Exception Type: ${e.runtimeType}');
+      print('Exception Stack Trace: ${StackTrace.current}');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
