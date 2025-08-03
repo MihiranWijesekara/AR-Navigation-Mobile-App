@@ -1,5 +1,9 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/services/user_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ActiveHotelScreen extends StatefulWidget {
   const ActiveHotelScreen({Key? key}) : super(key: key);
@@ -48,19 +52,68 @@ class _ActiveHotelScreenState extends State<ActiveHotelScreen> {
     }
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // Handle form submission
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Hotel information saved successfully!')),
-      );
+      if (_userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User ID not available. Please try again.'),
+          ),
+        );
+        return;
+      }
 
-      // You can add your save logic here
-      print('Hotel Name: ${_hotelNameController.text}');
-      print('Address: ${_addressController.text}');
-      print('Full Day Fee: ${_fullDayFeeController.text}');
-      print('Night Fee: ${_nightFeeController.text}');
-      print('Number of Rooms: ${_numberOfRoomsController.text}');
+      try {
+        // Prepare the data to send
+        final Map<String, dynamic> hotelData = {
+          'fullDayFee': _fullDayFeeController.text,
+          'nightFee': _nightFeeController.text,
+          'numberOfRooms': _numberOfRoomsController.text,
+          'address': _addressController.text,
+          'hotelName': _hotelNameController.text,
+        };
+
+        // Make the POST request
+        final response = await http.post(
+          Uri.parse(
+            'https://d136e3df961c.ngrok-free.app/api/register/hotel?userId=$_userId',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(hotelData),
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Hotel information saved successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Wait for the snackbar to show, then navigate to login page
+          await Future.delayed(const Duration(seconds: 1));
+
+          if (mounted) {
+            // Navigate to login page and clear all previous routes
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/login', // Replace with your login route name
+              (Route<dynamic> route) => false,
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to save hotel information. Status: ${response.statusCode}',
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
@@ -90,9 +143,7 @@ class _ActiveHotelScreenState extends State<ActiveHotelScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                _userId != null
-                    ? 'Hotel Information (ID: $_userId)'
-                    : 'Hotel Information',
+                'Hotel Information',
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -227,17 +278,17 @@ class _ActiveHotelScreenState extends State<ActiveHotelScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 24),
 
-              // Action Buttons
+              // Submit Button
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
                       onPressed: _resetForm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[600],
-                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.grey[350],
+                        foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

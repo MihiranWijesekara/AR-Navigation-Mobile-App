@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/services/user_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ActiveSafariScreen extends StatefulWidget {
   const ActiveSafariScreen({Key? key}) : super(key: key);
@@ -9,6 +12,7 @@ class ActiveSafariScreen extends StatefulWidget {
 
 class _ActiveSafariScreenState extends State<ActiveSafariScreen> {
   final _formKey = GlobalKey<FormState>();
+  String? _userId;
 
   // Controllers for form fields
   final _vehicleRegNumberController = TextEditingController();
@@ -29,6 +33,24 @@ class _ActiveSafariScreenState extends State<ActiveSafariScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // Load user data method
+  void _loadUserData() async {
+    final userData = await UserService.getUserData();
+    if (userData != null) {
+      setState(() {
+        _userId = userData['id']?.toString();
+      });
+      print('User role: ${userData['userRoles']}');
+      print('User ID: ${userData['id']}');
+    }
+  }
+
+  @override
   void dispose() {
     // Dispose controllers to prevent memory leaks
     _vehicleRegNumberController.dispose();
@@ -38,19 +60,68 @@ class _ActiveSafariScreenState extends State<ActiveSafariScreen> {
     super.dispose();
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      // Handle form submission
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Safari information saved successfully!')),
-      );
+      if (_userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User ID not available. Please try again.'),
+          ),
+        );
+        return;
+      }
 
-      // You can add your save logic here
-      print('Vehicle Registration Number: ${_vehicleRegNumberController.text}');
-      print('Vehicle Type: $_selectedVehicleType');
-      print('Number of Tourists: ${_numberOfTouristsController.text}');
-      print('Hourly Rate: ${_hourlyRateController.text}');
-      print('Full Day Service Rate: ${_fullDayServiceRateController.text}');
+      try {
+        // Prepare the data to send to backend
+        final Map<String, dynamic> vehicleData = {
+          'vehicleRegNumber': _vehicleRegNumberController.text,
+          'hourlyRate': _hourlyRateController.text,
+          'fullDayServiceRate': _fullDayServiceRateController.text,
+          'vehicleType': _selectedVehicleType,
+          'numberOfTourists': _numberOfTouristsController.text,
+        };
+
+        // Make the POST request
+        final response = await http.post(
+          Uri.parse(
+            'https://d136e3df961c.ngrok-free.app/api/register/vehicle?userId=$_userId',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(vehicleData),
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Safari information saved successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Wait for the snackbar to show, then navigate to login page
+          await Future.delayed(const Duration(seconds: 1));
+
+          if (mounted) {
+            // Navigate to login page and clear all previous routes
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/login', // Replace with your login route name
+              (Route<dynamic> route) => false,
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to save safari information. Status: ${response.statusCode}',
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 

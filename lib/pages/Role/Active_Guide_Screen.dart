@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/services/user_service.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ActiveGuideScreen extends StatefulWidget {
   const ActiveGuideScreen({Key? key}) : super(key: key);
@@ -9,13 +12,14 @@ class ActiveGuideScreen extends StatefulWidget {
 
 class _ActiveGuideScreenState extends State<ActiveGuideScreen> {
   final _formKey = GlobalKey<FormState>();
+  String? _userId;
 
   // Controllers for form fields
   final _ageController = TextEditingController();
   final _guideRegNumberController = TextEditingController();
   final _hourlyRateController = TextEditingController();
-  final _experienceController = TextEditingController();
-  final _titleController = TextEditingController();
+  final _numberOfExperienceYearsController = TextEditingController();
+  final _shortDescriptionController = TextEditingController();
 
   @override
   void dispose() {
@@ -23,24 +27,91 @@ class _ActiveGuideScreenState extends State<ActiveGuideScreen> {
     _ageController.dispose();
     _guideRegNumberController.dispose();
     _hourlyRateController.dispose();
-    _experienceController.dispose();
-    _titleController.dispose();
+    _numberOfExperienceYearsController.dispose();
+    _shortDescriptionController.dispose();
     super.dispose();
   }
 
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      // Handle form submission
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Guide information saved successfully!')),
-      );
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
 
-      // You can add your save logic here
-      print('Age: ${_ageController.text}');
-      print('Guide Registration Number: ${_guideRegNumberController.text}');
-      print('Hourly Rate: ${_hourlyRateController.text}');
-      print('Years of Experience: ${_experienceController.text}');
-      print('Title: ${_titleController.text}');
+  // Add this method to load user data
+  void _loadUserData() async {
+    final userData = await UserService.getUserData();
+    if (userData != null) {
+      setState(() {
+        _userId = userData['id']?.toString(); // Update the state with user ID
+      });
+      print('User role: ${userData['userRoles']}');
+      print('User ID: ${userData['id']}');
+    }
+  }
+
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      if (_userId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User ID not available. Please try again.'),
+          ),
+        );
+        return;
+      }
+
+      try {
+        // Prepare the data to send
+        final Map<String, dynamic> guideData = {
+          'age': _ageController.text,
+          'guideRegNumber': _guideRegNumberController.text,
+          'hourlyRate': _hourlyRateController.text,
+          'numberOfExperienceYears': _numberOfExperienceYearsController.text,
+          'shortDescription': _shortDescriptionController.text,
+        };
+
+        // Make the POST request
+        final response = await http.post(
+          Uri.parse(
+            'https://d136e3df961c.ngrok-free.app/api/register/guide?userId=$_userId',
+          ),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(guideData),
+        );
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Guide information saved successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          // Wait for the snackbar to show, then navigate to login page
+          await Future.delayed(const Duration(seconds: 1));
+
+          if (mounted) {
+            // Navigate to login page and clear all previous routes
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/login', // Replace with your login route name
+              (Route<dynamic> route) => false,
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Failed to save guide information. Status: ${response.statusCode}',
+              ),
+            ),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
     }
   }
 
@@ -49,8 +120,8 @@ class _ActiveGuideScreenState extends State<ActiveGuideScreen> {
     _ageController.clear();
     _guideRegNumberController.clear();
     _hourlyRateController.clear();
-    _experienceController.clear();
-    _titleController.clear();
+    _numberOfExperienceYearsController.clear();
+    _shortDescriptionController.clear();
   }
 
   @override
@@ -161,9 +232,9 @@ class _ActiveGuideScreenState extends State<ActiveGuideScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Years of Experience Field
+              // Number of Experience Years Field
               TextFormField(
-                controller: _experienceController,
+                controller: _numberOfExperienceYearsController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Years of Experience',
@@ -189,13 +260,14 @@ class _ActiveGuideScreenState extends State<ActiveGuideScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Title Field
+              // Short Description Field
               TextFormField(
-                controller: _titleController,
+                controller: _shortDescriptionController,
+                maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: 'Title',
-                  hintText: 'Enter your professional title',
-                  prefixIcon: const Icon(Icons.person),
+                  labelText: 'Short Description',
+                  hintText: 'Enter a brief description about yourself',
+                  prefixIcon: const Icon(Icons.description),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -204,10 +276,10 @@ class _ActiveGuideScreenState extends State<ActiveGuideScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your title';
+                    return 'Please enter a short description';
                   }
-                  if (value.length < 2) {
-                    return 'Title must be at least 2 characters';
+                  if (value.length < 10) {
+                    return 'Description must be at least 10 characters';
                   }
                   return null;
                 },

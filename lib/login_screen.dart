@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final url = Uri.parse(
-        'https://3f35dc373840.ngrok-free.app/api/auth/signin',
+        'https://d136e3df961c.ngrok-free.app/api/auth/signin',
       );
 
       // Debug: Log request data
