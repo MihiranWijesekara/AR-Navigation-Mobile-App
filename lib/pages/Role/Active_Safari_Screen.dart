@@ -84,7 +84,7 @@ class _ActiveSafariScreenState extends State<ActiveSafariScreen> {
         // Make the POST request
         final response = await http.post(
           Uri.parse(
-            'https://db5d2000e3cf.ngrok-free.app/api/register/vehicle?userId=$_userId',
+            'http://localhost:8082/api/register/vehicle?userId=$_userId',
           ),
           headers: {'Content-Type': 'application/json'},
           body: json.encode(vehicleData),

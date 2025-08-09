@@ -74,7 +74,7 @@ class _ActiveGuideScreenState extends State<ActiveGuideScreen> {
         // Make the POST request
         final response = await http.post(
           Uri.parse(
-            'https://db5d2000e3cf.ngrok-free.app/api/register/guide?userId=$_userId',
+            'http://localhost:8082/api/register/guide?userId=$_userId',
           ),
           headers: {'Content-Type': 'application/json'},
           body: json.encode(guideData),

@@ -46,6 +46,41 @@ class _SafariScreenState extends State<SafariScreen> {
     }
   }
 
+  // Add this method to handle the safari booking API call
+  Future<void> _submitSafariBooking({
+    required String safariId,
+    required String fullName,
+    required String nicNumber,
+    required String mobileNumber,
+    required String bookingDate,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8082/api/users/safari-booking'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'fullName': fullName,
+          'nicNumber': nicNumber,
+          'mobileNumber': mobileNumber,
+          'bookingDate': bookingDate,
+          'userId': int.parse(safariId), // Convert safariId to Long/int
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Safari booking submitted successfully');
+        print('Response: ${response.body}');
+      } else {
+        print('Failed to submit safari booking: ${response.statusCode}');
+        print('Error: ${response.body}');
+        throw Exception('Failed to submit safari booking: ${response.body}');
+      }
+    } catch (e) {
+      print('Error submitting safari booking: $e');
+      throw e;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,6 +149,7 @@ class _SafariScreenState extends State<SafariScreen> {
           padding: const EdgeInsets.only(bottom: 16),
           child: _buildSafariCard(
             context,
+            vehicle['safariId']?.toString() ?? 'unknown', // Pass safari ID
             vehicle['name'] ?? 'Unknown Owner',
             vehicle['vehicleType'] ?? 'Unknown Vehicle',
             vehicle['vehicleRegNumber'] ?? 'N/A',
@@ -144,6 +180,7 @@ class _SafariScreenState extends State<SafariScreen> {
 
   Widget _buildSafariCard(
     BuildContext context,
+    String safariId, // Add safari ID parameter
     String ownerName,
     String vehicleType,
     String regNumber,
@@ -250,6 +287,7 @@ class _SafariScreenState extends State<SafariScreen> {
                 onPressed: () {
                   _showSafariBookingModal(
                     context,
+                    safariId, // Pass safari ID
                     ownerName,
                     vehicleType,
                     regNumber,
@@ -279,6 +317,7 @@ class _SafariScreenState extends State<SafariScreen> {
 
   void _showSafariBookingModal(
     BuildContext context,
+    String safariId, // Add safari ID parameter
     String ownerName,
     String vehicleType,
     String regNumber,
@@ -495,8 +534,10 @@ class _SafariScreenState extends State<SafariScreen> {
                     );
                     if (pickedDate != null) {
                       selectedDate = pickedDate;
-                      dateController.text =
-                          '${pickedDate.day}/${pickedDate.month}/${pickedDate.year}';
+                      // Format date as YYYY-MM-DD for API consistency
+                      String formattedDate =
+                          '${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}';
+                      dateController.text = formattedDate;
                     }
                   },
                 ),
@@ -546,7 +587,7 @@ class _SafariScreenState extends State<SafariScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (nameController.text.isEmpty ||
                     nicController.text.isEmpty ||
                     mobileController.text.isEmpty ||
@@ -560,16 +601,49 @@ class _SafariScreenState extends State<SafariScreen> {
                   return;
                 }
 
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Safari booking confirmed! ${nameController.text} has booked $vehicleType ($regNumber) with $ownerName on ${dateController.text}',
+                // Console log the safari booking data
+                print('=== SAFARI BOOKING DATA ===');
+                print('Safari ID: $safariId');
+                print('Customer Name: ${nameController.text}');
+                print('NIC Number: ${nicController.text}');
+                print('Mobile Number: ${mobileController.text}');
+                print('Safari Date: ${dateController.text}');
+                print('Selected Date Object: $selectedDate');
+                print('Owner Name: $ownerName');
+                print('Vehicle Type: $vehicleType');
+                print('Registration Number: $regNumber');
+                print('Pricing Info: $pricingInfo');
+                print('============================');
+
+                try {
+                  // Submit safari booking to API
+                  await _submitSafariBooking(
+                    safariId: safariId,
+                    fullName: nameController.text,
+                    nicNumber: nicController.text,
+                    mobileNumber: mobileController.text,
+                    bookingDate: dateController.text,
+                  );
+
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Safari booking confirmed! ${nameController.text} has booked $vehicleType ($regNumber) with $ownerName on ${dateController.text}',
+                      ),
+                      backgroundColor: const Color(0xff059669),
+                      duration: const Duration(seconds: 4),
                     ),
-                    backgroundColor: const Color(0xff059669),
-                    duration: const Duration(seconds: 4),
-                  ),
-                );
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to book safari: $e'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xff059669),
