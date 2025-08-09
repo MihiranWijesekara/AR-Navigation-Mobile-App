@@ -33,9 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final url = Uri.parse(
-        'https://d136e3df961c.ngrok-free.app/api/auth/signin',
-      );
+      final url = Uri.parse('http://localhost:8082/api/auth/signin');
 
       // Debug: Log request data
       print('Login Request URL: $url');

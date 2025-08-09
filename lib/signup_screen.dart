@@ -112,7 +112,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('https://a15d31bd8e7f.ngrok-free.app/api/auth/signup'),
+        Uri.parse('https://10aaa3a4a84c.ngrok-free.app/api/auth/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(userData),
       );

@@ -1,7 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class GuideScreen extends StatelessWidget {
+class GuideScreen extends StatefulWidget {
   const GuideScreen({super.key});
+
+  @override
+  State<GuideScreen> createState() => _GuideScreenState();
+}
+
+class _GuideScreenState extends State<GuideScreen> {
+  List<dynamic> guides = [];
+  bool isLoading = true;
+  String errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchGuides();
+  }
+
+  Future<void> _fetchGuides() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8082/api/users/guides'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          guides = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+          errorMessage = 'Failed to load guides: ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Error fetching guides: $e';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,60 +75,52 @@ class GuideScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Expanded(
-              child: ListView(
-                children: [
-                  _buildGuideCard(
-                    context,
-                    "John Miller",
-                    "Mountain & Adventure Guide",
-                    "4.9",
-                    "5+ years experience",
-                    "\$45/hour",
-                  ),
-                  const SizedBox(height: 16),
-                  _buildGuideCard(
-                    context,
-                    "David Chen",
-                    "Historical & Cultural Guide",
-                    "4.8",
-                    "3+ years experience",
-                    "\$35/hour",
-                  ),
-                  const SizedBox(height: 16),
-                  _buildGuideCard(
-                    context,
-                    "Michael Brown",
-                    "City Tour Specialist",
-                    "4.7",
-                    "4+ years experience",
-                    "\$30/hour",
-                  ),
-                  const SizedBox(height: 16),
-                  _buildGuideCard(
-                    context,
-                    "Alex Johnson",
-                    "Nature & Wildlife Guide",
-                    "4.9",
-                    "6+ years experience",
-                    "\$50/hour",
-                  ),
-                  const SizedBox(height: 16),
-                  _buildGuideCard(
-                    context,
-                    "Ryan Wilson",
-                    "Photography Tour Guide",
-                    "4.6",
-                    "2+ years experience",
-                    "\$25/hour",
-                  ),
-                ],
-              ),
-            ),
+            Expanded(child: _buildGuideList()),
             const SizedBox(height: 16),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildGuideList() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xff059669)),
+      );
+    }
+
+    if (errorMessage.isNotEmpty) {
+      return Center(
+        child: Text(errorMessage, style: const TextStyle(color: Colors.red)),
+      );
+    }
+
+    if (guides.isEmpty) {
+      return const Center(
+        child: Text(
+          "No guides available",
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: guides.length,
+      itemBuilder: (context, index) {
+        final guide = guides[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: _buildGuideCard(
+            context,
+            guide['name'] ?? 'Unknown Guide',
+            guide['shortDescription'] ?? 'No description',
+            '4.8', // Default rating since API doesn't provide this
+            '${guide['numberOfExperienceYears'] ?? 0}+ years experience',
+            '\$${guide['hourlyRate']?.toStringAsFixed(2) ?? '0'}/hour',
+          ),
+        );
+      },
     );
   }
 
@@ -215,7 +249,6 @@ class GuideScreen extends StatelessWidget {
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () {
-                  // Open booking modal
                   _showGuideBookingModal(context, guideName, hourlyRate);
                 },
                 style: ElevatedButton.styleFrom(
@@ -502,119 +535,4 @@ class GuideScreen extends StatelessWidget {
   }
 }
 
-// Available Guides Screen
-class AvailableGuidesScreen extends StatelessWidget {
-  const AvailableGuidesScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xff0d1b2a),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff0d1b2a),
-        foregroundColor: Colors.white,
-        title: const Text("Available Guides"),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.group, size: 80, color: Color(0xff059669)),
-            SizedBox(height: 20),
-            Text(
-              "Hello World from Available Guides!",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "This is the Available Guides screen",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Book Guide Screen
-class BookGuideScreen extends StatelessWidget {
-  const BookGuideScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xff0d1b2a),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff0d1b2a),
-        foregroundColor: Colors.white,
-        title: const Text("Book a Guide"),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.calendar_today, size: 80, color: Color(0xff2563eb)),
-            SizedBox(height: 20),
-            Text(
-              "Hello World from Book Guide!",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "This is the Book a Guide screen",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Guide Profile Screen
-class GuideProfileScreen extends StatelessWidget {
-  const GuideProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xff0d1b2a),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff0d1b2a),
-        foregroundColor: Colors.white,
-        title: const Text("Guide Profile"),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.person, size: 80, color: Color(0xffdc2626)),
-            SizedBox(height: 20),
-            Text(
-              "Hello World from Guide Profile!",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "This is the Guide Profile screen",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// https://10aaa3a4a84c.ngrok-free.app
