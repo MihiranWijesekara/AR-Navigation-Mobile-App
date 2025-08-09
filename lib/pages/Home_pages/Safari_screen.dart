@@ -1,7 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class SafariScreen extends StatelessWidget {
+class SafariScreen extends StatefulWidget {
   const SafariScreen({super.key});
+
+  @override
+  State<SafariScreen> createState() => _SafariScreenState();
+}
+
+class _SafariScreenState extends State<SafariScreen> {
+  List<dynamic> safariVehicles = [];
+  bool isLoading = true;
+  String errorMessage = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSafariVehicles();
+  }
+
+  Future<void> _fetchSafariVehicles() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8082/api/users/safari'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          safariVehicles = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+          errorMessage =
+              'Failed to load safari vehicles: ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Error fetching safari vehicles: $e';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,61 +76,70 @@ class SafariScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            Expanded(
-              child: ListView(
-                children: [
-                  _buildSafariCard(
-                    context,
-                    "Rajesh Kumar",
-                    "Jeep Wrangler - 4WD",
-                    "ABC-1234",
-                    "\$80/hour • \$600/day",
-                    Icons.directions_car,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSafariCard(
-                    context,
-                    "Sunil Fernando",
-                    "Toyota Land Cruiser",
-                    "XYZ-5678",
-                    "\$90/hour • \$700/day",
-                    Icons.airport_shuttle,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSafariCard(
-                    context,
-                    "Mahesh Silva",
-                    "Safari Van - 8 Seater",
-                    "DEF-9012",
-                    "\$120/hour • \$950/day",
-                    Icons.rv_hookup,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSafariCard(
-                    context,
-                    "Pradeep Wijesekara",
-                    "Off-Road Defender",
-                    "GHI-3456",
-                    "\$85/hour • \$650/day",
-                    Icons.local_shipping,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSafariCard(
-                    context,
-                    "Chaminda Perera",
-                    "Mini Bus - 15 Seater",
-                    "JKL-7890",
-                    "\$150/hour • \$1200/day",
-                    Icons.directions_bus,
-                  ),
-                ],
-              ),
-            ),
+            Expanded(child: _buildSafariList()),
             const SizedBox(height: 16),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildSafariList() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xff059669)),
+      );
+    }
+
+    if (errorMessage.isNotEmpty) {
+      return Center(
+        child: Text(errorMessage, style: const TextStyle(color: Colors.red)),
+      );
+    }
+
+    if (safariVehicles.isEmpty) {
+      return const Center(
+        child: Text(
+          "No safari vehicles available",
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: safariVehicles.length,
+      itemBuilder: (context, index) {
+        final vehicle = safariVehicles[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: _buildSafariCard(
+            context,
+            vehicle['name'] ?? 'Unknown Owner',
+            vehicle['vehicleType'] ?? 'Unknown Vehicle',
+            vehicle['vehicleRegNumber'] ?? 'N/A',
+            '\$${vehicle['hourlyRate']?.toStringAsFixed(2) ?? '0'}/hour • \$${vehicle['fullDayServiceRate']?.toStringAsFixed(2) ?? '0'}/day',
+            _getVehicleIcon(vehicle['vehicleType']),
+          ),
+        );
+      },
+    );
+  }
+
+  IconData _getVehicleIcon(String? vehicleType) {
+    if (vehicleType == null) return Icons.directions_car;
+
+    if (vehicleType.toLowerCase().contains('jeep')) {
+      return Icons.directions_car;
+    } else if (vehicleType.toLowerCase().contains('van')) {
+      return Icons.airport_shuttle;
+    } else if (vehicleType.toLowerCase().contains('bus')) {
+      return Icons.directions_bus;
+    } else if (vehicleType.toLowerCase().contains('defender') ||
+        vehicleType.toLowerCase().contains('4wd')) {
+      return Icons.local_shipping;
+    } else {
+      return Icons.directions_car;
+    }
   }
 
   Widget _buildSafariCard(
@@ -196,7 +248,6 @@ class SafariScreen extends StatelessWidget {
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () {
-                  // Open safari booking modal
                   _showSafariBookingModal(
                     context,
                     ownerName,
@@ -249,9 +300,9 @@ class SafariScreen extends StatelessWidget {
           ),
           title: Column(
             children: [
-              const Icon(
-                Icons.directions_car,
-                color: Color(0xff059669),
+              Icon(
+                _getVehicleIcon(vehicleType),
+                color: const Color(0xff059669),
                 size: 40,
               ),
               const SizedBox(height: 8),
@@ -496,7 +547,6 @@ class SafariScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                // Validate inputs
                 if (nameController.text.isEmpty ||
                     nicController.text.isEmpty ||
                     mobileController.text.isEmpty ||
@@ -510,7 +560,6 @@ class SafariScreen extends StatelessWidget {
                   return;
                 }
 
-                // Process booking - can be connected to backend
                 Navigator.of(context).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -534,123 +583,6 @@ class SafariScreen extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-// Available Guides Screen
-class AvailableGuidesScreen extends StatelessWidget {
-  const AvailableGuidesScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xff0d1b2a),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff0d1b2a),
-        foregroundColor: Colors.white,
-        title: const Text("Available Guides"),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.group, size: 80, color: Color(0xff059669)),
-            SizedBox(height: 20),
-            Text(
-              "Hello World from Available Guides!",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "This is the Available Guides screen",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Book Guide Screen
-class BookGuideScreen extends StatelessWidget {
-  const BookGuideScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xff0d1b2a),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff0d1b2a),
-        foregroundColor: Colors.white,
-        title: const Text("Book a Guide"),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.calendar_today, size: 80, color: Color(0xff2563eb)),
-            SizedBox(height: 20),
-            Text(
-              "Hello World from Book Guide!",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "This is the Book a Guide screen",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Guide Profile Screen
-class GuideProfileScreen extends StatelessWidget {
-  const GuideProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xff0d1b2a),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff0d1b2a),
-        foregroundColor: Colors.white,
-        title: const Text("Guide Profile"),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.person, size: 80, color: Color(0xffdc2626)),
-            SizedBox(height: 20),
-            Text(
-              "Hello World from Guide Profile!",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "This is the Guide Profile screen",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
