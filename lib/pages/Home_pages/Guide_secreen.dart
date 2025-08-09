@@ -113,6 +113,7 @@ class _GuideScreenState extends State<GuideScreen> {
           padding: const EdgeInsets.only(bottom: 16),
           child: _buildGuideCard(
             context,
+            guide['guideId']?.toString() ?? 'unknown', // Pass guide ID
             guide['name'] ?? 'Unknown Guide',
             guide['shortDescription'] ?? 'No description',
             '4.8', // Default rating since API doesn't provide this
@@ -126,6 +127,7 @@ class _GuideScreenState extends State<GuideScreen> {
 
   Widget _buildGuideCard(
     BuildContext context,
+    String guideId, // Add guide ID parameter
     String guideName,
     String specialty,
     String rating,
@@ -249,7 +251,12 @@ class _GuideScreenState extends State<GuideScreen> {
               const SizedBox(height: 8),
               ElevatedButton(
                 onPressed: () {
-                  _showGuideBookingModal(context, guideName, hourlyRate);
+                  _showGuideBookingModal(
+                    context,
+                    guideId,
+                    guideName,
+                    hourlyRate,
+                  ); // Pass guide ID
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xff2563eb),
@@ -274,6 +281,7 @@ class _GuideScreenState extends State<GuideScreen> {
 
   void _showGuideBookingModal(
     BuildContext context,
+    String guideId, // Add guide ID parameter
     String guideName,
     String hourlyRate,
   ) {
@@ -506,6 +514,16 @@ class _GuideScreenState extends State<GuideScreen> {
                   );
                   return;
                 }
+
+                // Console log the booking data
+                print('=== GUIDE BOOKING DATA ===');
+                print('Guide ID: $guideId'); // Add this line
+                print('Customer Name: ${nameController.text}');
+                print('NIC Number: ${nicController.text}');
+                print('Mobile Number: ${mobileController.text}');
+                print('Booking Date: ${dateController.text}');
+                print('Selected Date Object: $selectedDate');
+                print('========================');
 
                 // Process booking - can be connected to backend
                 Navigator.of(context).pop();
