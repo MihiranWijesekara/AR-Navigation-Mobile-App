@@ -188,7 +188,7 @@ class HotelScreen extends StatelessWidget {
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
+                  mainAxisSpacing: 15,
                   childAspectRatio: 0.85,
                 ),
                 itemCount: _hotelList.length,
@@ -224,7 +224,7 @@ class HotelScreen extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xff1b263b),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
       child: InkWell(
@@ -239,21 +239,20 @@ class HotelScreen extends StatelessWidget {
         },
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(8.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.min,
             children: [
               // Hotel Icon
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(icon, size: 30, color: color),
+                child: Icon(icon, size: 24, color: color),
               ),
-
-              const SizedBox(height: 8),
 
               // Hotel Name
               Text(
@@ -261,41 +260,39 @@ class HotelScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
 
-              const SizedBox(height: 4),
-
               // Rating
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.star, size: 14, color: Colors.amber),
+                  Icon(Icons.star, size: 12, color: Colors.amber),
                   const SizedBox(width: 2),
                   Text(
                     rating.toString(),
-                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    style: const TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ],
               ),
-
-              const SizedBox(height: 4),
 
               // Price
               Text(
                 price,
                 style: TextStyle(
                   color: color,
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: FontWeight.w600,
                 ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-
-              const SizedBox(height: 8),
 
               // Book Button
               SizedBox(
@@ -308,15 +305,15 @@ class HotelScreen extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: color,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    minimumSize: const Size(0, 32),
+                    minimumSize: const Size(0, 28),
                   ),
                   child: const Text(
                     'Book Now',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
