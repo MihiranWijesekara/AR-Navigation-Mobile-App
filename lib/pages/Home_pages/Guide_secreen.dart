@@ -45,6 +45,41 @@ class _GuideScreenState extends State<GuideScreen> {
     }
   }
 
+  // Add this method to handle the booking API call
+  Future<void> _submitGuideBooking({
+    required String guideId,
+    required String fullName,
+    required String nicNumber,
+    required String mobileNumber,
+    required String bookingDate,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://localhost:8082/api/users/guide-booking'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'fullName': fullName,
+          'nicNumber': nicNumber,
+          'mobileNumber': mobileNumber,
+          'bookingDate': bookingDate,
+          'userId': int.parse(guideId), // Convert guideId to Long/int
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Booking submitted successfully');
+        print('Response: ${response.body}');
+      } else {
+        print('Failed to submit booking: ${response.statusCode}');
+        print('Error: ${response.body}');
+        throw Exception('Failed to submit booking: ${response.body}');
+      }
+    } catch (e) {
+      print('Error submitting booking: $e');
+      throw e;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -434,8 +469,10 @@ class _GuideScreenState extends State<GuideScreen> {
                     );
                     if (pickedDate != null) {
                       selectedDate = pickedDate;
-                      dateController.text =
-                          '${pickedDate.day}/${pickedDate.month}/${pickedDate.year}';
+                      // Format date as YYYY-MM-DD for API
+                      String formattedDate =
+                          '${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}';
+                      dateController.text = formattedDate;
                     }
                   },
                 ),
@@ -500,7 +537,7 @@ class _GuideScreenState extends State<GuideScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 // Validate inputs
                 if (nameController.text.isEmpty ||
                     nicController.text.isEmpty ||
@@ -514,28 +551,36 @@ class _GuideScreenState extends State<GuideScreen> {
                   );
                   return;
                 }
+                try {
+                  // Submit booking to API
+                  await _submitGuideBooking(
+                    guideId: guideId,
+                    fullName: nameController.text,
+                    nicNumber: nicController.text,
+                    mobileNumber: mobileController.text,
+                    bookingDate: dateController.text,
+                  );
 
-                // Console log the booking data
-                print('=== GUIDE BOOKING DATA ===');
-                print('Guide ID: $guideId'); // Add this line
-                print('Customer Name: ${nameController.text}');
-                print('NIC Number: ${nicController.text}');
-                print('Mobile Number: ${mobileController.text}');
-                print('Booking Date: ${dateController.text}');
-                print('Selected Date Object: $selectedDate');
-                print('========================');
-
-                // Process booking - can be connected to backend
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Guide booking confirmed! ${nameController.text} has booked $guideName ($hourlyRate) for ${dateController.text}',
+                  // Process booking - can be connected to backend
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Guide booking confirmed! ${nameController.text} has booked $guideName ($hourlyRate) for ${dateController.text}',
+                      ),
+                      backgroundColor: const Color(0xff059669),
+                      duration: const Duration(seconds: 3),
                     ),
-                    backgroundColor: const Color(0xff059669),
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to book guide: $e'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xff059669),
