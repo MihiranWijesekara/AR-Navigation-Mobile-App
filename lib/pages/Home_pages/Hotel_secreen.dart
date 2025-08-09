@@ -1,122 +1,48 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class HotelScreen extends StatelessWidget {
+class HotelScreen extends StatefulWidget {
   const HotelScreen({super.key});
 
-  // Sample hotel data - can be replaced with backend data
-  final List<Map<String, dynamic>> _hotelList = const [
-    {
-      'name': 'Grand Palace Hotel',
-      'icon': Icons.apartment,
-      'color': Color(0xff059669),
-      'rating': 4.8,
-      'Number of rooms': 120,
-      'price': '\$120/night & \$150 per day',
-    },
-    {
-      'name': 'Ocean View Resort',
-      'icon': Icons.hotel,
-      'color': Color(0xff2563eb),
-      'rating': 4.6,
-      'Number of rooms': 120,
-      'price': '\$95/night & \$130 per day',
-    },
-    {
-      'name': 'Mountain Lodge',
-      'icon': Icons.cabin,
-      'color': Color(0xffdc2626),
-      'rating': 4.7,
-      'Number of rooms': 120,
-      'price': '\$80/night & \$100 per day',
-    },
-    {
-      'name': 'City Center Inn',
-      'icon': Icons.business,
-      'color': Color(0xff7c3aed),
-      'rating': 4.5,
-      'Number of rooms': 120,
-      'price': '\$65/night & \$90 per day',
-    },
-    {
-      'name': 'Sunset Villa',
-      'icon': Icons.villa,
-      'color': Color(0xfff59e0b),
-      'rating': 4.9,
-      'Number of rooms': 120,
-      'price': '\$150/night & \$200 per day',
-    },
-  ];
+  @override
+  State<HotelScreen> createState() => _HotelScreenState();
+}
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xff1b263b),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Row(
-            children: [
-              Icon(Icons.logout, color: Colors.red, size: 24),
-              SizedBox(width: 8),
-              Text(
-                'Logout',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          content: const Text(
-            'Are you sure you want to logout?',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Close the dialog
-                Navigator.of(context).pop();
+class _HotelScreenState extends State<HotelScreen> {
+  List<dynamic> hotels = [];
+  bool isLoading = true;
+  String errorMessage = '';
 
-                // Navigate to login page and clear all previous routes
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/login', // Replace with your login route name
-                  (Route<dynamic> route) => false,
-                );
+  @override
+  void initState() {
+    super.initState();
+    _fetchHotels();
+  }
 
-                // Show logout success message
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Logged out successfully'),
-                    backgroundColor: Colors.green,
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Logout'),
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _fetchHotels() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:8082/api/users/hotels'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          hotels = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+          errorMessage = 'Failed to load hotels: ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Error fetching hotels: $e';
+      });
+    }
   }
 
   @override
@@ -183,34 +109,83 @@ class HotelScreen extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Hotels Grid
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 15,
-                  childAspectRatio: 0.85,
-                ),
-                itemCount: _hotelList.length,
-                itemBuilder: (context, index) {
-                  final hotel = _hotelList[index];
-                  return _buildHotelCard(
-                    context,
-                    hotel['name'],
-                    hotel['icon'],
-                    hotel['color'],
-                    hotel['rating'],
-                    hotel['price'],
-                  );
-                },
-              ),
-            ),
+            Expanded(child: _buildHotelList()),
 
             const SizedBox(height: 20),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildHotelList() {
+    if (isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xff059669)),
+      );
+    }
+
+    if (errorMessage.isNotEmpty) {
+      return Center(
+        child: Text(errorMessage, style: const TextStyle(color: Colors.red)),
+      );
+    }
+
+    if (hotels.isEmpty) {
+      return const Center(
+        child: Text(
+          "No hotels available",
+          style: TextStyle(color: Colors.white),
+        ),
+      );
+    }
+
+    return GridView.builder(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 15,
+        childAspectRatio: 0.85,
+      ),
+      itemCount: hotels.length,
+      itemBuilder: (context, index) {
+        final hotel = hotels[index];
+        final color = _getHotelColor(index);
+        final icon = _getHotelIcon(index);
+        final rating = 4.5 + (index * 0.1); // Generate rating based on index
+
+        return _buildHotelCard(
+          context,
+          hotel['hotelName'] ?? 'Unknown Hotel',
+          icon,
+          color,
+          rating,
+          '\$${hotel['nightFee']?.toStringAsFixed(0) ?? '0'}/night & \$${hotel['fullDayFee']?.toStringAsFixed(0) ?? '0'} per day',
+        );
+      },
+    );
+  }
+
+  Color _getHotelColor(int index) {
+    final colors = [
+      const Color(0xff059669),
+      const Color(0xff2563eb),
+      const Color(0xffdc2626),
+      const Color(0xff7c3aed),
+      const Color(0xfff59e0b),
+    ];
+    return colors[index % colors.length];
+  }
+
+  IconData _getHotelIcon(int index) {
+    final icons = [
+      Icons.apartment,
+      Icons.hotel,
+      Icons.cabin,
+      Icons.business,
+      Icons.villa,
+    ];
+    return icons[index % icons.length];
   }
 
   Widget _buildHotelCard(
@@ -229,7 +204,6 @@ class HotelScreen extends StatelessWidget {
       ),
       child: InkWell(
         onTap: () {
-          // Handle hotel selection - can be connected to backend
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Selected: $hotelName'),
@@ -275,7 +249,7 @@ class HotelScreen extends StatelessWidget {
                   Icon(Icons.star, size: 12, color: Colors.amber),
                   const SizedBox(width: 2),
                   Text(
-                    rating.toString(),
+                    rating.toStringAsFixed(1),
                     style: const TextStyle(color: Colors.white70, fontSize: 10),
                   ),
                 ],
@@ -299,7 +273,6 @@ class HotelScreen extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    // Open booking modal
                     _showBookingModal(context, hotelName, color, price);
                   },
                   style: ElevatedButton.styleFrom(
@@ -321,6 +294,73 @@ class HotelScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xff1b263b),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.logout, color: Colors.red, size: 24),
+              SizedBox(width: 8),
+              Text(
+                'Logout',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Are you sure you want to logout?',
+            style: TextStyle(color: Colors.white70, fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/login',
+                  (Route<dynamic> route) => false,
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Logged out successfully'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Logout'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -515,41 +555,53 @@ class HotelScreen extends StatelessWidget {
                           Row(
                             children: [
                               Expanded(
-                                child: RadioListTile<String>(
-                                  title: const Text(
-                                    'Per Night',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
+                                child: Row(
+                                  children: [
+                                    Radio<String>(
+                                      value: 'per night',
+                                      groupValue: selectedBookingType,
+                                      activeColor: color,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          selectedBookingType = value!;
+                                        });
+                                      },
                                     ),
-                                  ),
-                                  value: 'per night',
-                                  groupValue: selectedBookingType,
-                                  activeColor: color,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedBookingType = value!;
-                                    });
-                                  },
+                                    const Expanded(
+                                      child: Text(
+                                        'Per Night',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               Expanded(
-                                child: RadioListTile<String>(
-                                  title: const Text(
-                                    'Per Day',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 14,
+                                child: Row(
+                                  children: [
+                                    Radio<String>(
+                                      value: 'per day',
+                                      groupValue: selectedBookingType,
+                                      activeColor: color,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          selectedBookingType = value!;
+                                        });
+                                      },
                                     ),
-                                  ),
-                                  value: 'per day',
-                                  groupValue: selectedBookingType,
-                                  activeColor: color,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedBookingType = value!;
-                                    });
-                                  },
+                                    const Expanded(
+                                      child: Text(
+                                        'Per Day',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -598,7 +650,6 @@ class HotelScreen extends StatelessWidget {
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    // Validate inputs
                     if (nameController.text.isEmpty ||
                         nicController.text.isEmpty ||
                         mobileController.text.isEmpty ||
@@ -612,7 +663,6 @@ class HotelScreen extends StatelessWidget {
                       return;
                     }
 
-                    // Process booking - can be connected to backend
                     Navigator.of(context).pop();
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -638,123 +688,6 @@ class HotelScreen extends StatelessWidget {
           },
         );
       },
-    );
-  }
-}
-
-// Available Guides Screen
-class AvailableGuidesScreen extends StatelessWidget {
-  const AvailableGuidesScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xff0d1b2a),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff0d1b2a),
-        foregroundColor: Colors.white,
-        title: const Text("Available Guides"),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.group, size: 80, color: Color(0xff059669)),
-            SizedBox(height: 20),
-            Text(
-              "Hello World from Available Guides!",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "This is the Available Guides screen",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Book Guide Screen
-class BookGuideScreen extends StatelessWidget {
-  const BookGuideScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xff0d1b2a),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff0d1b2a),
-        foregroundColor: Colors.white,
-        title: const Text("Book a Guide"),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.calendar_today, size: 80, color: Color(0xff2563eb)),
-            SizedBox(height: 20),
-            Text(
-              "Hello World from Book Guide!",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "This is the Book a Guide screen",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Guide Profile Screen
-class GuideProfileScreen extends StatelessWidget {
-  const GuideProfileScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xff0d1b2a),
-      appBar: AppBar(
-        backgroundColor: const Color(0xff0d1b2a),
-        foregroundColor: Colors.white,
-        title: const Text("Guide Profile"),
-      ),
-      body: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.person, size: 80, color: Color(0xffdc2626)),
-            SizedBox(height: 20),
-            Text(
-              "Hello World from Guide Profile!",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              "This is the Guide Profile screen",
-              style: TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
