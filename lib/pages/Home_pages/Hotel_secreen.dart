@@ -45,6 +45,48 @@ class _HotelScreenState extends State<HotelScreen> {
     }
   }
 
+  // Add this method to handle the hotel booking API call
+  Future<void> _submitHotelBooking({
+    required String hotelId,
+    required String fullName,
+    required String nicNumber,
+    required String mobileNumber,
+    required String bookingDate,
+    required String bookingType,
+  }) async {
+    try {
+      // Set fee values based on booking type
+      String fullDayFee = bookingType == 'per day' ? '1' : '0';
+      String nightFee = bookingType == 'per night' ? '1' : '0';
+
+      final response = await http.post(
+        Uri.parse('http://localhost:8082/api/users/hotel-booking'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'fullName': fullName,
+          'nicNumber': nicNumber,
+          'mobileNumber': mobileNumber,
+          'bookingDate': bookingDate,
+          'fullDayFee': fullDayFee,
+          'nightFee': nightFee,
+          'userId': hotelId, // Use hotelId as userId
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Hotel booking submitted successfully');
+        print('Response: ${response.body}');
+      } else {
+        print('Failed to submit hotel booking: ${response.statusCode}');
+        print('Error: ${response.body}');
+        throw Exception('Failed to submit hotel booking: ${response.body}');
+      }
+    } catch (e) {
+      print('Error submitting hotel booking: $e');
+      throw e;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -156,6 +198,7 @@ class _HotelScreenState extends State<HotelScreen> {
 
         return _buildHotelCard(
           context,
+          hotel['hotelId']?.toString() ?? 'unknown', // Pass hotel ID
           hotel['hotelName'] ?? 'Unknown Hotel',
           icon,
           color,
@@ -190,6 +233,7 @@ class _HotelScreenState extends State<HotelScreen> {
 
   Widget _buildHotelCard(
     BuildContext context,
+    String hotelId, // Add hotel ID parameter
     String hotelName,
     IconData icon,
     Color color,
@@ -273,7 +317,13 @@ class _HotelScreenState extends State<HotelScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    _showBookingModal(context, hotelName, color, price);
+                    _showBookingModal(
+                      context,
+                      hotelId, // Pass hotel ID
+                      hotelName,
+                      color,
+                      price,
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: color,
@@ -366,6 +416,7 @@ class _HotelScreenState extends State<HotelScreen> {
 
   void _showBookingModal(
     BuildContext context,
+    String hotelId, // Add hotel ID parameter
     String hotelName,
     Color color,
     String price,
@@ -525,8 +576,10 @@ class _HotelScreenState extends State<HotelScreen> {
                         );
                         if (pickedDate != null) {
                           selectedDate = pickedDate;
-                          dateController.text =
-                              '${pickedDate.day}/${pickedDate.month}/${pickedDate.year}';
+                          // Format date as YYYY-MM-DD for API consistency
+                          String formattedDate =
+                              '${pickedDate.year}-${pickedDate.month.toString().padLeft(2, '0')}-${pickedDate.day.toString().padLeft(2, '0')}';
+                          dateController.text = formattedDate;
                         }
                       },
                     ),
@@ -649,7 +702,7 @@ class _HotelScreenState extends State<HotelScreen> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (nameController.text.isEmpty ||
                         nicController.text.isEmpty ||
                         mobileController.text.isEmpty ||
@@ -663,16 +716,53 @@ class _HotelScreenState extends State<HotelScreen> {
                       return;
                     }
 
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Booking confirmed for ${nameController.text} at $hotelName ($selectedBookingType) on ${dateController.text}',
-                        ),
-                        backgroundColor: color,
-                        duration: const Duration(seconds: 3),
-                      ),
+                    // Console log the hotel booking data
+                    print('=== HOTEL BOOKING DATA ===');
+                    print('Hotel ID: $hotelId');
+                    print('Customer Name: ${nameController.text}');
+                    print('NIC Number: ${nicController.text}');
+                    print('Mobile Number: ${mobileController.text}');
+                    print('Booking Date: ${dateController.text}');
+                    print('Selected Date Object: $selectedDate');
+                    print('Booking Type: $selectedBookingType');
+                    print(
+                      'Full Day Fee: ${selectedBookingType == 'per day' ? '1' : '0'}',
                     );
+                    print(
+                      'Night Fee: ${selectedBookingType == 'per night' ? '1' : '0'}',
+                    );
+                    print('===========================');
+
+                    try {
+                      // Submit hotel booking to API
+                      await _submitHotelBooking(
+                        hotelId: hotelId,
+                        fullName: nameController.text,
+                        nicNumber: nicController.text,
+                        mobileNumber: mobileController.text,
+                        bookingDate: dateController.text,
+                        bookingType: selectedBookingType,
+                      );
+
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Hotel booking confirmed! ${nameController.text} has booked $hotelName ($selectedBookingType) on ${dateController.text}',
+                          ),
+                          backgroundColor: color,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Failed to book hotel: $e'),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: color,
