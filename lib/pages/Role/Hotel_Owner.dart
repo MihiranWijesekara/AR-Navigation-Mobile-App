@@ -1,7 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class HotelOwner extends StatelessWidget {
+import '../../services/user_service.dart';
+
+class HotelOwner extends StatefulWidget {
   const HotelOwner({super.key});
+
+  @override
+  State<HotelOwner> createState() => _HotelOwnerState();
+}
+
+class _HotelOwnerState extends State<HotelOwner> {
+  List<dynamic> bookings = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchBookings();
+  }
+
+  Future<void> fetchBookings() async {
+    final userData = await UserService.getUserData();
+    final userId = userData?['id'];
+    if (userId == null) {
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+
+    final url = Uri.parse(
+      'http://localhost:8082/api/users/user-Hotel-bookings?userId=$userId',
+    );
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        setState(() {
+          bookings = json.decode(response.body);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  String getBookingType(dynamic booking) {
+    final fullDayFee = booking['fullDayFee'] ?? 0;
+    final nightFee = booking['nightFee'] ?? 0;
+
+    if (fullDayFee == 1) {
+      return 'Full Day';
+    } else if (nightFee == 1) {
+      return 'Night';
+    } else {
+      return 'Unknown';
+    }
+  }
+
+  Future<void> _logout() async {
+    await UserService.clearUserData();
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,108 +83,84 @@ class HotelOwner extends StatelessWidget {
         backgroundColor: const Color(0xff0d1b2a),
         foregroundColor: Colors.white,
         title: const Text("Hotel Owner"),
+        actions: [
+          IconButton(
+            onPressed: _logout,
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              child: Text(
-                'Current Bookings',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+        child: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : bookings.isEmpty
+            ? const Center(
+                child: Text(
+                  "No bookings found.",
+                  style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
-              ),
-            ),
-            // Booking Card 1
-            Card(
-              color: const Color(0xff1b263b),
-              elevation: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Booking Details',
+              )
+            : ListView(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      'Current Bookings',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    _buildBookingInfo('Name', 'John Doe'),
-                    _buildBookingInfo('NIC', '123456789V'),
-                    _buildBookingInfo('Mobile Number', '+94 77 123 4567'),
-                    _buildBookingInfo('Booking Date', '2025-08-05'),
-                    _buildBookingInfo('Booking Duration', '2 nights'),
-                  ],
-                ),
-              ),
-            ),
-            // Booking Card 2
-            Card(
-              color: const Color(0xff1b263b),
-              elevation: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Booking Details',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                  ),
+                  ...bookings.map(
+                    (booking) => Card(
+                      color: const Color(0xff1b263b),
+                      elevation: 4,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Booking Details',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildBookingInfo(
+                              'Name',
+                              booking['fullName'] ?? '',
+                            ),
+                            _buildBookingInfo(
+                              'NIC',
+                              booking['nicNumber'] ?? '',
+                            ),
+                            _buildBookingInfo(
+                              'Mobile Number',
+                              booking['mobileNumber'] ?? '',
+                            ),
+                            _buildBookingInfo(
+                              'Booking Date',
+                              booking['bookingDate'] ?? '',
+                            ),
+                            _buildBookingInfo(
+                              'Booking Type',
+                              getBookingType(booking),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    _buildBookingInfo('Name', 'Jane Smith'),
-                    _buildBookingInfo('NIC', '987654321V'),
-                    _buildBookingInfo('Mobile Number', '+94 71 987 6543'),
-                    _buildBookingInfo('Booking Date', '2025-08-08'),
-                    _buildBookingInfo('Booking Duration', '1 day'),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ),
-            // Booking Card 3
-            Card(
-              color: const Color(0xff1b263b),
-              elevation: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Booking Details',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildBookingInfo('Name', 'Mike Johnson'),
-                    _buildBookingInfo('NIC', '456789123V'),
-                    _buildBookingInfo('Mobile Number', '+94 76 456 7890'),
-                    _buildBookingInfo('Booking Date', '2025-08-12'),
-                    _buildBookingInfo('Booking Duration', '3 nights'),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -146,30 +194,6 @@ class HotelOwner extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-      ],
     );
   }
 }
