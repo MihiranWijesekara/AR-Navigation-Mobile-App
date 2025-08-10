@@ -16,62 +16,6 @@ class HotelOwner extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // Hotel Owner Profile Section
-            Container(
-              padding: const EdgeInsets.all(20.0),
-              margin: const EdgeInsets.only(bottom: 24),
-              decoration: BoxDecoration(
-                color: const Color(0xff415a77),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  // Profile Picture
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: const Color(0xff778da9),
-                    child: Icon(Icons.person, size: 50, color: Colors.white),
-                  ),
-                  const SizedBox(height: 16),
-                  // Hotel Owner Name
-                  Text(
-                    'Grand Plaza Hotel',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Owner Name
-                  Text(
-                    'Owner: Mr. Ravi Perera',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Location
-                  Text(
-                    'Colombo, Sri Lanka',
-                    style: TextStyle(color: Colors.white60, fontSize: 14),
-                  ),
-                  const SizedBox(height: 16),
-                  // Statistics Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildStatItem('Total Rooms', '25'),
-                      _buildStatItem('Bookings', '18'),
-                      _buildStatItem('Rating', '4.5★'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // Booking Cards Title
             Padding(
               padding: const EdgeInsets.only(bottom: 16.0),
               child: Text(
