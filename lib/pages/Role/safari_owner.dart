@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import '../../services/user_service.dart';
 
 class SafariOwner extends StatelessWidget {
   const SafariOwner({super.key});
+
+  Future<void> _logout(BuildContext context) async {
+    await UserService.clearUserData();
+    if (context.mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -11,6 +19,13 @@ class SafariOwner extends StatelessWidget {
         backgroundColor: const Color(0xff0d1b2a),
         foregroundColor: Colors.white,
         title: const Text("Safari Owner"),
+        actions: [
+          IconButton(
+            onPressed: () => _logout(context),
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
